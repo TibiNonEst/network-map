@@ -188,6 +188,10 @@
       transition: all .1s ease-in;
 	}
 
+    :global(body) {
+      font-family: sans-serif;
+    }
+
 	:global(input) {
 	  padding: .3rem;
 	  margin-bottom: .75rem;
