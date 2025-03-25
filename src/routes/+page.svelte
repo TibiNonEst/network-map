@@ -9,30 +9,34 @@
 	import { invalidateAll } from "$app/navigation";
 
 	import Map from "$lib/Map.svelte";
-	import Details from "$lib/Details.svelte";
+	import PopDetails from "$lib/PopDetails.svelte";
 	import Login from "$lib/Login.svelte";
 	import Create from "$lib/Create.svelte";
 
 	import { user } from "$lib/stores";
 
-	import type { ModifyAdjacency, ModifyExchange, AddPop, Pop, User, RemovePop } from "$lib/types";
+	import type {Connection, Pop, User} from "$lib/types";
+	import ConnectionDetails from "$lib/ConnectionDetails.svelte";
 
-	export let data;
-	$: origin = data.origin;
-	$: pops = data.pops;
-	$: exchanges = data.exchanges;
-	$: popsJson = data.popsJson;
-	$: connectionsJson = data.connectionsJson;
+	let { data } = $props();
+	const origin = $derived(data.origin);
+	const pops = $derived(data.pops);
+	const exchanges = $derived(data.exchanges);
+	const connections = $derived(data.connections);
+	const providers = $derived(data.providers);
+	const cables = $derived(data.cables);
+	const popsJson = $derived(data.popsJson);
+	const connectionsJson = $derived(data.connectionsJson);
 
-	let logged_in = false;
+	let logged_in = $state(false);
 
-	let selected = false;
-	let current_pop: Pop;
+	let current_pop: Pop | null = $state(null);
+	let current_connection: Connection | null = $state(null);
 
-	let login_open = false;
-	let create_open = false;
+	let login_open = $state(false);
+	let create_open = $state(false);
 
-	let updateMap: () => void;
+	let map: Map;
 
 	onMount(() => {
 		const stored = sessionStorage.getItem("user");
@@ -41,7 +45,7 @@
 			try {
 				$user = JSON.parse(stored);
 				logged_in = true;
-			} catch (e) {
+			} catch {
 				console.log("User JSON could not be parsed, resetting");
 				sessionStorage.removeItem("user");
 			}
@@ -58,8 +62,8 @@
 		};
 	});
 
-	async function login(event: CustomEvent<User>) {
-		const auth = event.detail;
+	async function login(username: string, password: string) {
+		const auth = { username, password };
 		const result = await authRequest(`${origin}/auth`, { user: auth });
 
 		if (result.ok) {
@@ -71,57 +75,68 @@
 		}
 	}
 
-	async function addPop(event: CustomEvent<AddPop>) {
-		const pop = event.detail;
+	async function addPop(id: string, fac: string) {
+		const pop = { id, fac };
 		await authRequest(`${origin}/pop`, { body: JSON.stringify(pop) });
 		await invalidateAll();
 		create_open = false;
-		updateMap();
+		map.update();
 	}
 
-	async function removePop(event: CustomEvent<RemovePop>) {
-		const pop = event.detail;
-		await authRequest(`${origin}/pop`, { body: JSON.stringify(pop), method: "DELETE" });
+	async function removePop(id: string) {
+		const body = { id };
+		await authRequest(`${origin}/pop`, { body: JSON.stringify(body), method: "DELETE" });
 		await invalidateAll();
-		selected = false;
-		updateMap();
+		deselectPop();
+		map.update();
 	}
 
-	async function addAdjacency(event: CustomEvent<ModifyAdjacency>) {
-		const details = event.detail;
-		await authRequest(`${origin}/connection`, { body: JSON.stringify({ start: details.pop, end: details.adjacency })});
+	async function addConnection(pop1: string, pop2: string, provider: string, cable: string, segments: number[]) {
+		const connection = { start: pop1, end: pop2, provider, cable, segments };
+		await authRequest(`${origin}/connection`, { body: JSON.stringify(connection) });
 		await invalidateAll();
-		selected = false;
-		updateMap();
+		create_open = false;
+		map.update();
 	}
 
-	async function removeAdjacency(event: CustomEvent<ModifyAdjacency>) {
-		const details = event.detail;
-		await authRequest(`${origin}/connection`, { body: JSON.stringify({ start: details.pop, end: details.adjacency }), method: "DELETE"});
+	async function removeConnection(pop1: string, pop2: string) {
+		const connection = { start: pop1, end: pop2 };
+		await authRequest(`${origin}/connection`, { body: JSON.stringify(connection), method: "DELETE" });
 		await invalidateAll();
-		selected = false;
-		updateMap();
+		deselectConnection();
+		map.update();
 	}
 
-	async function addExchange(event: CustomEvent<ModifyExchange>) {
-		const exchange = event.detail;
-		await authRequest(`${origin}/exchange`, { body: JSON.stringify(exchange) });
+	async function addExchange(pop: string, id: number) {
+		const body = { pop, id };
+		await authRequest(`${origin}/exchange`, { body: JSON.stringify(body) });
 		await invalidateAll();
-		selected = false;
-		updateMap();
+		deselectPop();
+		map.update();
 	}
 
-	async function removeExchange(event: CustomEvent<ModifyExchange>) {
-		const exchange = event.detail;
-		await authRequest(`${origin}/exchange`, { body: JSON.stringify(exchange), method: "DELETE" });
+	async function removeExchange(pop: string, id: number) {
+		const body = { pop, id };
+		await authRequest(`${origin}/exchange`, { body: JSON.stringify(body), method: "DELETE" });
 		await invalidateAll();
-		selected = false;
-		updateMap();
+		deselectPop();
+		map.update();
 	}
 
-	function selectPop(event: CustomEvent<Pop>) {
-		selected = true;
-		current_pop = event.detail;
+	function selectPop(pop: Pop) {
+		current_pop = pop;
+	}
+
+	function deselectPop() {
+		current_pop = null;
+	}
+
+	function selectConnection(connection: Connection) {
+		current_connection = connection;
+	}
+
+	function deselectConnection() {
+		current_connection = null;
 	}
 
 	function authRequest(url: string, options: { user?: User, body?: string, method?: string } = {}) {
@@ -141,34 +156,38 @@
 </svelte:head>
 
 {#if login_open}
-	<Login on:submit={login} on:close={() => login_open = false} />
+	<Login submit={login} close={() => login_open = false} />
 {/if}
 
 {#if logged_in}
-	<button class="right-btn create" on:click={() => create_open = !create_open}>
+	<button class="right-btn create" onclick={() => create_open = !create_open} aria-label="Create new PoP">
 		<i class="fa-solid fa-plus icon" style="rotate: {create_open ? 45 : 0}deg"></i>
 	</button>
 {:else}
-	<button class="right-btn" on:click={() => login_open = true}>
+	<button class="right-btn" onclick={() => login_open = true}>
 		<i class="fa-solid fa-user"></i> Login
 	</button>
 {/if}
 
 {#if create_open}
-	<Create on:submit={addPop} />
+	<Create {pops} {providers} {cables} {addPop} {addConnection} />
 {/if}
 
-{#if selected}
-	<Details {pops} {exchanges} {current_pop} {logged_in} on:removePop={removePop} on:addAdjacency={addAdjacency} on:removeAdjacency={removeAdjacency} on:addExchange={addExchange} on:removeExchange={removeExchange} />
+{#if current_pop != null}
+	<PopDetails {pops} {exchanges} {current_pop} {logged_in} {removePop} {addExchange} {removeExchange} />
 {/if}
 
-<Map {pops} {popsJson} {connectionsJson} on:select={selectPop} on:deselect={() => selected = false} bind:update={updateMap} />
+{#if current_connection != null}
+	<ConnectionDetails {cables} {current_connection} {logged_in} {removeConnection} />
+{/if}
+
+<Map {pops} {connections} {cables} {popsJson} {connectionsJson} {selectPop} {deselectPop} {selectConnection} {deselectConnection} bind:this={map} />
 
 <style lang="scss">
 	.create {
-      height: 2rem;
-      width: 2rem;
-	  padding: 0 !important;
+		height: 2rem;
+		width: 2rem;
+		padding: 0 !important;
     }
 
     .right-btn {
@@ -185,34 +204,41 @@
     }
 
 	.icon {
-      transition: all .1s ease-in;
+		transition: all .1s ease-in;
 	}
 
     :global(body) {
-      font-family: sans-serif;
+		font-family: sans-serif;
     }
 
 	:global(input) {
-	  padding: .3rem;
-	  margin-bottom: .75rem;
-	  border-style: solid;
-	  border-radius: .25rem;
+		padding: .3rem;
+		margin-bottom: .75rem;
+		border-style: solid;
+		border-radius: .25rem;
+	}
+
+	:global(select) {
+		padding: .3rem;
+		margin-bottom: .75rem;
+		border-style: solid;
+		border-radius: .25rem;
 	}
 
 	:global(button) {
-      border: none;
-      border-radius: .25rem;
-	  padding: .3rem;
-	  cursor: pointer;
-	  transition: background-color .1s ease-in;
+		border: none;
+		border-radius: .25rem;
+		padding: .3rem;
+		cursor: pointer;
+		transition: background-color .1s ease-in;
 	}
 
     :global(p) {
-      margin: 0;
+		margin: 0;
     }
 
     :global(ul) {
-      margin: 0;
-      padding-left: 1rem;
+		margin: 0;
+		padding-left: 1rem;
     }
 </style>

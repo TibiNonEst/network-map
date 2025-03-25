@@ -1,20 +1,16 @@
 <script lang="ts">
 	import mapboxgl from "mapbox-gl";
 
-	import { createEventDispatcher, onMount } from "svelte";
+	import { onMount } from "svelte";
 
 	import { PUBLIC_MAPBOX_ACCESS_TOKEN } from "$env/static/public";
 
-	import type { FeatureCollection, LineString, Point } from "geojson";
+	import type { Point } from "geojson";
 	import type { GeoJSONSource } from "mapbox-gl";
 
-	import type { Pop } from "$lib/types";
+    import type { MapProps } from "$lib/types";
 
-	export let pops: Pop[];
-	export let popsJson: FeatureCollection<Point>;
-	export let connectionsJson: FeatureCollection<LineString>;
-
-	const dispatch = createEventDispatcher();
+	let { pops, connections, cables, popsJson, connectionsJson, selectPop, deselectPop, selectConnection, deselectConnection }: MapProps = $props();
 
 	let map: mapboxgl.Map;
 
@@ -23,15 +19,15 @@
 		(map.getSource("connections") as GeoJSONSource).setData(connectionsJson);
 	}
 
-	onMount(async () => {
+	onMount(async () =>  {
 		mapboxgl.accessToken = PUBLIC_MAPBOX_ACCESS_TOKEN;
 
 		map = new mapboxgl.Map({
 			container: "map",
-			style: "mapbox://styles/mapbox/streets-v12",
-			center: [-97, 39.5],
+			style: "mapbox://styles/mapbox/standard",
+			center: [-74, 42.5],
 			minZoom: 2,
-			zoom: 4.25
+			zoom: 6
 		});
 
 		map.on("load", () => {
@@ -46,7 +42,7 @@
 				source: "connections",
 				paint: {
 					"line-color": "blue",
-					"line-width": 2
+					"line-width": 3
 				}
 			});
 
@@ -103,7 +99,7 @@
 
 					  map.easeTo({
 						  center: ((features[0].geometry as Point).coordinates as [number, number]),
-						  zoom: zoom
+						  zoom: zoom!
 					  });
 				  }
 				);
@@ -149,21 +145,69 @@
 				popPopup.remove();
 			});
 
+            const connectionPopup = new mapboxgl.Popup({
+                closeButton: false,
+                closeOnClick: false
+            });
+
+            map.on("mouseenter", "connections", (e) => {
+                if (e.features === undefined) return;
+
+                const feature = e.features[0];
+                const connection = connections.find(c => c.start === feature.properties?.start && c.end === feature.properties?.end);
+
+                if (connection === undefined) {
+                    return;
+                }
+
+                const html = [
+                    `<p><b>${connection.start} - ${connection.end}</b></p>`,
+                    `<p><b>Provider:</b> ${connection.provider}</p>`
+                ];
+
+                if (connection.cable) {
+                    const cable = cables.features.find(cable => cable.properties?.id === connection.cable);
+                    html.push(`<b>Cable:</b> ${cable?.properties?.name}`);
+                }
+
+                connectionPopup.setLngLat(e.lngLat).setHTML(html.join("")).addTo(map);
+            });
+
+            map.on("mouseleave", "connections", () => {
+                connectionPopup.remove();
+            });
+
 			map.on("click", "pops", (e) => {
 				if (e.features === undefined) return;
 
 				const feature = e.features[0];
-				dispatch("select", pops.find(p => p.id === feature.properties?.id));
+                const pop = pops.find(p => p.id === feature.properties?.id);
+                if (pop) {
+                    selectPop(pop);
+                }
 			});
+
+            map.on("click", "connections", (e) => {
+                if (e.features === undefined) return;
+
+                const feature = e.features[0];
+                const connection = connections.find(c => c.start === feature.properties?.start && c.end === feature.properties?.end);
+                if (connection) {
+                    selectConnection(connection);
+                }
+            });
 
 			map.on("click", (e) => {
 				const features = map.queryRenderedFeatures(e.point);
-				if (features.find(feature => feature.layer.id === "pops" || feature.layer.id === "clusters") === undefined) {
-					dispatch("deselect");
+				if (features.find(feature => feature.layer?.id === "pops" || feature.layer?.id === "clusters") === undefined) {
+					deselectPop();
 				}
+                if (features.find(feature => feature.layer?.id === "connections") === undefined) {
+                    deselectConnection();
+                }
 			});
 
-			for (const layer of ["clusters", "pops"]) {
+			for (const layer of ["clusters", "pops", "connections"]) {
 				map.on("mouseenter", layer, () => {
 					map.getCanvas().style.cursor = "pointer";
 				});

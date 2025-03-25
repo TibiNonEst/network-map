@@ -1,24 +1,27 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-	import { fade } from 'svelte/transition';
+	import { fade } from "svelte/transition";
+	import type { LoginProps } from "$lib/types";
 
-	let username: string;
-	let password: string;
+	let username = $state("");
+	let password = $state("");
 
-	const dispatch = createEventDispatcher();
+	let { close, submit }: LoginProps = $props();
 
-	const submit = () => dispatch("submit", { username, password });
-	const close = () => dispatch("close");
+	const onClose = () => close();
+	function onSubmit (event: SubmitEvent) {
+		event.preventDefault();
+		submit(username, password);
+	}
 </script>
 
 <div class="login">
-	<div class="shade" on:click={close} aria-hidden="true" transition:fade={{duration: 50}} />
+	<div class="shade" onclick={onClose} aria-hidden="true" transition:fade={{duration: 50}}></div>
 
 	<div class="modal" transition:fade={{duration: 50}}>
 		<h2>Login</h2>
-		<form on:submit|preventDefault={submit}>
+		<form onsubmit={onSubmit}>
 			<input bind:value={username} placeholder="Username">
-			<input bind:value={password} placeholder="Password">
+			<input bind:value={password} type="password" placeholder="Password">
 			<button type="submit">Login</button>
 		</form>
 	</div>
