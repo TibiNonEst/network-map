@@ -40,8 +40,40 @@
 				id: "connections",
 				type: "line",
 				source: "connections",
+				filter: ["has", "provider"],
 				paint: {
-					"line-color": "blue",
+					"line-color": [
+						"step",
+						["get", "provider"],
+						"black",
+						0, "#2727FF", // Arelion
+						1, "#00A0C5", // Aqua Comms
+						2, "#00A9E1", // AT&T
+						3, "#00AAA1", // Bulk Infra
+						4, "#000066", // BW Digital
+						5, "#001F60", // Cirion
+						6, "#00D5BB", // Colt
+						7, "#F19300", // Confluence
+						8, "#0673BA", // Crosslake Fiber
+						9, "#ED1C24", // Equinix
+						10, "#F58045", // Exa
+						11, "#8EBC1E", // FirstLight
+						12, "#4ED869", // GTT
+						13, "#1AD6A1", // Inligo
+						14, "#0C9ED9", // Lumen
+						15, "#0072BC", // NTT
+						16, "#FF7900", // Orange
+						17, "#0E5C67", // Seaborn
+						18, "#196E99", // Southern Crossroads
+						19, "#EB2136", // Sparkle
+						20, "#3D88FF", // SUBCO
+						21, "#5E99CF", // Tata
+						22, "#0553FF", // Telstra
+						23, "#0094A1", // Telxius
+						24, "#F50A23", // Verizon
+						25, "#061645", // Vocus
+						26, "#F4821F", // Zayo
+					],
 					"line-width": 3
 				}
 			});
@@ -51,7 +83,7 @@
 				data: popsJson,
 				cluster: true,
 				clusterMaxZoom: 17,
-				clusterRadius: 30
+				clusterRadius: 15
 			});
 
 			map.addLayer({
@@ -60,8 +92,8 @@
 				source: "pops",
 				filter: ["has", "point_count"],
 				paint: {
-					"circle-color": ["step", ["get", "point_count"], "#51bbd6", 100, "#f1f075", 750, "#f28cb1"],
-					"circle-radius": ["step", ["get", "point_count"], 20, 100, 30, 750, 40]
+					"circle-color": "#6D28D9",
+					"circle-radius": 20
 				}
 			});
 
@@ -72,7 +104,10 @@
 				filter: ["has", "point_count"],
 				layout: {
 					"text-field": ["get", "point_count_abbreviated"],
-					"text-size": 12
+					"text-size": 14
+				},
+				paint: {
+					"text-color": "white"
 				}
 			});
 
@@ -82,7 +117,7 @@
 				source: "pops",
 				filter: ["!", ["has", "point_count"]],
 				paint: {
-					"circle-color": "#11b4da",
+					"circle-color": "#6D28D9",
 					"circle-radius": 5,
 					"circle-stroke-width": 1,
 					"circle-stroke-color": "#fff"

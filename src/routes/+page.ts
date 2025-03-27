@@ -67,11 +67,13 @@ export async function load({ fetch }: PageLoadEvent) {
 			}
 		}
 
-		return { coords, start: start.id, end: end.id };
+		const p_idx = providers.indexOf(connection.provider);
+
+		return { coords, start: start.id, end: end.id, provider: p_idx };
 	});
 
 	const popsJson: FeatureCollection<Point> = GeoJSON.parse(pops, { Point: [ "latitude", "longitude" ], include: [ "id", "active" ] });
-	const connectionsJson: FeatureCollection<LineString> = GeoJSON.parse(connectionsData, { LineString: "coords", include: [ "start", "end" ] });
+	const connectionsJson: FeatureCollection<LineString> = GeoJSON.parse(connectionsData, { LineString: "coords", include: [ "start", "end", "provider" ] });
 
 	return { origin, pops, exchanges, connections, providers, cables, popsJson, connectionsJson };
 }
