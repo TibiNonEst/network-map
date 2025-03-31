@@ -15,8 +15,9 @@
 
 	import { user } from "$lib/stores";
 
-	import type {Connection, Pop, User} from "$lib/types";
+	import type { Connection, Pop, User } from "$lib/types";
 	import ConnectionDetails from "$lib/ConnectionDetails.svelte";
+	import type { Providers } from "../../../isp-api/src/main";
 
 	let { data } = $props();
 	const origin = $derived(data.origin);
@@ -83,6 +84,14 @@
 		map.update();
 	}
 
+	async function updatePop(id: string, provider: Providers) {
+		const body = { id, provider };
+		await authRequest(`${origin}/pop`, { body: JSON.stringify(body), method: "PATCH" });
+		await invalidateAll();
+		selectPop(id);
+		map.update();
+	}
+
 	async function removePop(id: string) {
 		const body = { id };
 		await authRequest(`${origin}/pop`, { body: JSON.stringify(body), method: "DELETE" });
@@ -111,7 +120,7 @@
 		const body = { pop, id };
 		await authRequest(`${origin}/exchange`, { body: JSON.stringify(body) });
 		await invalidateAll();
-		deselectPop();
+		selectPop(pop);
 		map.update();
 	}
 
@@ -119,12 +128,12 @@
 		const body = { pop, id };
 		await authRequest(`${origin}/exchange`, { body: JSON.stringify(body), method: "DELETE" });
 		await invalidateAll();
-		deselectPop();
+		selectPop(pop);
 		map.update();
 	}
 
-	function selectPop(pop: Pop) {
-		current_pop = pop;
+	function selectPop(id: string) {
+		current_pop = pops.find(pop => pop.id === id) || null;
 	}
 
 	function deselectPop() {
@@ -174,7 +183,7 @@
 {/if}
 
 {#if current_pop != null}
-	<PopDetails {pops} {exchanges} {current_pop} {logged_in} {removePop} {addExchange} {removeExchange} />
+	<PopDetails {pops} {exchanges} {providers} {current_pop} {logged_in} {updatePop} {removePop} {addExchange} {removeExchange} />
 {/if}
 
 {#if current_connection != null}
@@ -241,4 +250,8 @@
 		margin: 0;
 		padding-left: 1rem;
     }
+
+	:global(a) {
+		color: #6D28D9;
+	}
 </style>

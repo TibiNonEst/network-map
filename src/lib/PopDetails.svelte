@@ -2,15 +2,31 @@
 	import type { PopDetailsProps } from "$lib/types";
 
 	let {
-		pops, exchanges, current_pop, logged_in,
-		removePop, addExchange, removeExchange
+		pops, exchanges, providers, current_pop, logged_in,
+		updatePop, removePop, addExchange, removeExchange
 	}: PopDetailsProps = $props();
 
+	//@ts-ignore
+	let current_provider = $derived(current_pop.provider);
+
+	let provider = $state(-1);
 	let new_exchange = $state("");
+
+	$effect(() => {
+		provider = current_provider || -1;
+	});
 
 	function submitAddExchange(event: SubmitEvent) {
 		event.preventDefault();
+
 		addExchange(current_pop.id, Number.parseInt(new_exchange));
+
+		//@ts-ignore
+		event.currentTarget.reset();
+	}
+
+	function selectProvider() {
+		updatePop(current_pop.id, provider);
 	}
 </script>
 
@@ -23,6 +39,19 @@
 	</p>
 	<p>{current_pop.location}</p>
 	<p>{current_pop.id} | <a href="https://www.peeringdb.com/fac/{current_pop.fac}">PeeringDB</a></p>
+
+	<br><b>Provider:</b>
+	{#if logged_in}
+		<select name="provider" id="provider" bind:value={provider} onchange={selectProvider}>
+			<option value={-1} selected>No provider provided</option>
+			{#each providers as provider, idx}
+				<option value={idx}>{provider.replace("_", " ")}</option>
+			{/each}
+		</select>
+	{:else}
+		<span>{current_provider}</span>
+		<br>
+	{/if}
 
 	{#if current_pop.adjacencies.length > 0}
 		<br><b>Adjacencies:</b>
