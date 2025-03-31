@@ -49,7 +49,7 @@
 			{/each}
 		</select>
 	{:else}
-		<span>{current_provider}</span>
+		<span>{current_provider && current_provider > 0 ? providers[current_provider].replace("_", " ") : "None"}</span>
 		<br>
 	{/if}
 
