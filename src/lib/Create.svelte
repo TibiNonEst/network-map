@@ -10,22 +10,17 @@
 	let pop2 = $state("");
 	let provider = $state("");
 	let cable = $state("");
-	let segments = $state([]);
 
-	let { pops, providers, cables, addPop, addConnection }: CreateProps = $props();
-
-	let segmentData = $derived(cables.features.find((c) => c.properties?.id === cable)?.geometry.coordinates || []);
+	let { pops, providers, addPop, addConnection }: CreateProps = $props();
 
 	const orderedPops = pops.toSorted((pop1, pop2) => pop1.id.localeCompare(pop2.id));
-	const orderedCables = cables.features.toSorted((cable1, cable2) => cable1.properties?.name.localeCompare(cable2.properties?.name));
-	const normalizedProviders = providers.map((provider) => provider.replaceAll("_", " "));
 
 	function onsubmit(event: SubmitEvent) {
 		event.preventDefault();
 		if (type === "pop") {
 			addPop(id, fac);
 		} else {
-			addConnection(pop1, pop2, provider, cable, segments);
+			addConnection(pop1, pop2, provider, cable);
 		}
 	}
 </script>
@@ -56,24 +51,11 @@
 		</select>
 		<select name="provider" id="provider" bind:value={provider} required>
 			<option value="" disabled selected hidden>Select provider</option>
-			{#each normalizedProviders as provider}
-				<option value={provider}>{provider}</option>
+			{#each providers as provider}
+				<option value={provider.name}>{provider.name}</option>
 			{/each}
 		</select>
-		<select name="cable" id="cable" bind:value={cable}>
-			<option value="" disabled selected hidden>Select cable (optional)</option>
-			{#each orderedCables as cable}
-				<option value={cable.properties?.id}>{cable.properties?.name}</option>
-			{/each}
-		</select>
-		{#if cable}
-			<div class="segments">
-				{#each segmentData as segment, idx}
-					<input type="checkbox" value={idx} id={"s" + idx} bind:group={segments}>
-					<label for={"s" + idx}>{idx}</label>
-				{/each}
-			</div>
-		{/if}
+		<input bind:value={cable} placeholder="Cable">
 		<button type="submit">Create Connection</button>
 	{/if}
 </form>
@@ -105,14 +87,6 @@
 
 		input:checked + label {
 			border-bottom: 2px lightgrey solid;
-		}
-	}
-
-	.segments {
-		display: flex;
-
-		label {
-			margin-right: .25rem;
 		}
 	}
 

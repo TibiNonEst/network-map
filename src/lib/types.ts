@@ -1,7 +1,7 @@
-import type { FeatureCollection, LineString, MultiLineString, Point } from "geojson";
+import type { FeatureCollection, LineString, Point } from "geojson";
 
-import type { Connection, Exchange, Pop, Providers } from "../../../isp-api/src/api";
-export type { Connection, Exchange, Pop, Providers };
+import type { Connection, Exchange, Pop, Provider } from "../../../isp-api/src/api";
+export type { Connection, Exchange, Pop, Provider };
 
 export interface User {
 	username: string;
@@ -12,28 +12,29 @@ export interface User {
 export interface PopDetailsProps {
 	pops: Pop[];
 	exchanges: Exchange[];
-	providers: string[],
+	providers: Provider[],
 	current_pop: Pop;
 	logged_in: boolean;
 
-	updatePop: (id: string, provider: Providers) => void;
+	updatePop: (id: string, provider: string) => void;
 	removePop: (id: string) => void;
 	addExchange: (pop: string, id: number) => void;
 	removeExchange: (pop: string, id: number) => void;
 }
 
 export interface ConnectionDetailsProps {
-	cables: FeatureCollection<MultiLineString>;
+	providers: Provider[];
 	current_connection: Connection;
 	logged_in: boolean;
 
-	removeConnection: (start: string, end: string) => void;
+	removeConnection: (id: number) => void;
+	updateConnection: (id: number, provider: string, cable: string, route: string) => void;
 }
 
 export interface MapProps {
 	pops: Pop[];
 	connections: Connection[];
-	cables: FeatureCollection<MultiLineString>;
+	providers: Provider[];
 	popsJson: FeatureCollection<Point>;
 	connectionsJson: FeatureCollection<LineString>;
 
@@ -45,11 +46,10 @@ export interface MapProps {
 
 export interface CreateProps {
 	pops: Pop[];
-	providers: string[];
-	cables: FeatureCollection<MultiLineString>;
+	providers: Provider[];
 
 	addPop: (id: string, fac: string) => void;
-	addConnection: (pop1: string, pop2: string, provider: string, cable: string, segments: number[]) => void;
+	addConnection: (pop1: string, pop2: string, provider: string, cable: string) => void;
 }
 
 export interface LoginProps {

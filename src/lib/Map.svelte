@@ -10,7 +10,7 @@
 
     import type { MapProps } from "$lib/types";
 
-	let { pops, connections, cables, popsJson, connectionsJson, selectPop, deselectPop, selectConnection, deselectConnection }: MapProps = $props();
+	let { pops, connections, providers, popsJson, connectionsJson, selectPop, deselectPop, selectConnection, deselectConnection }: MapProps = $props();
 
 	let map: mapboxgl.Map;
 
@@ -19,39 +19,9 @@
 		(map.getSource("connections") as GeoJSONSource).setData(connectionsJson);
 	}
 
-	const providerMap = [
-		0, "#2727FF", // Arelion
-		1, "#00A0C5", // Aqua Comms
-		2, "#00A9E1", // AT&T
-		3, "#00AAA1", // Bulk Infra
-		4, "#000066", // BW Digital
-		5, "#001F60", // Cirion
-		6, "#0068B3", // Cologix
-		7, "#00D5BB", // Colt
-		8, "#F19300", // Confluence
-		9, "#0673BA", // Crosslake Fiber
-		10, "#ED1C24", // Equinix
-		11, "#F58045", // Exa
-		12, "#8EBC1E", // FirstLight
-		13, "#4ED869", // GTT
-		14, "#1AD6A1", // Inligo
-		15, "#0C9ED9", // Lumen
-		16, "#00A7E1", // Netrality
-		17, "#0072BC", // NTT
-		18, "#FF7900", // Orange
-		19, "#0E5C67", // Seaborn
-		20, "#196E99", // Southern Crossroads
-		21, "#EB2136", // Sparkle
-		22, "#3D88FF", // SUBCO
-		23, "#5E99CF", // Tata
-		24, "#0553FF", // Telstra
-		25, "#0094A1", // Telxius
-		26, "#F50A23", // Verizon
-		27, "#061645", // Vocus
-		28, "#F4821F", // Zayo
-	];
+    const providerMap = providers.flatMap((provider, idx) => [idx, provider.color]);
 
-	onMount(async () =>  {
+    onMount(async () =>  {
 		mapboxgl.accessToken = PUBLIC_MAPBOX_ACCESS_TOKEN;
 
 		map = new mapboxgl.Map({
@@ -176,8 +146,8 @@
 					`<p>${pop.id}</p>`
 				];
 
-				if (pop.adjacencies.length > 0) {
-					html.push(`<br><b>Adjacencies:</b> ${pop.adjacencies.length}`);
+				if (pop.connections.length > 0) {
+					html.push(`<br><b>Connections:</b> ${pop.connections.length}`);
 				}
 
 				if (pop.exchanges.length > 0) {
@@ -212,8 +182,7 @@
                 ];
 
                 if (connection.cable) {
-                    const cable = cables.features.find(cable => cable.properties?.id === connection.cable);
-                    html.push(`<b>Cable:</b> ${cable?.properties?.name}`);
+                    html.push(`<b>Cable:</b> ${connection.cable}`);
                 }
 
                 connectionPopup.setLngLat(e.lngLat).setHTML(html.join("")).addTo(map);

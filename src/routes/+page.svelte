@@ -17,7 +17,6 @@
 
 	import type { Connection, Pop, User } from "$lib/types";
 	import ConnectionDetails from "$lib/ConnectionDetails.svelte";
-	import type { Providers } from "../../../isp-api/src/main";
 
 	let { data } = $props();
 	const origin = $derived(data.origin);
@@ -25,7 +24,6 @@
 	const exchanges = $derived(data.exchanges);
 	const connections = $derived(data.connections);
 	const providers = $derived(data.providers);
-	const cables = $derived(data.cables);
 	const popsJson = $derived(data.popsJson);
 	const connectionsJson = $derived(data.connectionsJson);
 
@@ -84,7 +82,7 @@
 		map.update();
 	}
 
-	async function updatePop(id: string, provider: Providers) {
+	async function updatePop(id: string, provider: string) {
 		const body = { id, provider };
 		await authRequest(`${origin}/pop`, { body: JSON.stringify(body), method: "PATCH" });
 		await invalidateAll();
@@ -100,16 +98,24 @@
 		map.update();
 	}
 
-	async function addConnection(pop1: string, pop2: string, provider: string, cable: string, segments: number[]) {
-		const connection = { start: pop1, end: pop2, provider, cable, segments };
+	async function addConnection(pop1: string, pop2: string, provider: string, cable: string) {
+		const connection = { start: pop1, end: pop2, provider, cable };
 		await authRequest(`${origin}/connection`, { body: JSON.stringify(connection) });
 		await invalidateAll();
 		create_open = false;
 		map.update();
 	}
 
-	async function removeConnection(pop1: string, pop2: string) {
-		const connection = { start: pop1, end: pop2 };
+	async function updateConnection(id: number, provider: string, cable: string, route: string) {
+		const body = { id, provider, cable, route };
+		await authRequest(`${origin}/connection`, { body: JSON.stringify(body), method: "PATCH" });
+		await invalidateAll();
+		selectPop(current_pop!.id);
+		map.update();
+	}
+
+	async function removeConnection(id: number) {
+		const connection = { id };
 		await authRequest(`${origin}/connection`, { body: JSON.stringify(connection), method: "DELETE" });
 		await invalidateAll();
 		deselectConnection();
@@ -179,7 +185,7 @@
 {/if}
 
 {#if create_open}
-	<Create {pops} {providers} {cables} {addPop} {addConnection} />
+	<Create {pops} {providers} {addPop} {addConnection} />
 {/if}
 
 {#if current_pop != null}
@@ -187,10 +193,10 @@
 {/if}
 
 {#if current_connection != null}
-	<ConnectionDetails {cables} {current_connection} {logged_in} {removeConnection} />
+	<ConnectionDetails {providers} {current_connection} {logged_in} {removeConnection} {updateConnection} />
 {/if}
 
-<Map {pops} {connections} {cables} {popsJson} {connectionsJson} {selectPop} {deselectPop} {selectConnection} {deselectConnection} bind:this={map} />
+<Map {pops} {connections} {providers} {popsJson} {connectionsJson} {selectPop} {deselectPop} {selectConnection} {deselectConnection} bind:this={map} />
 
 <style lang="scss">
 	.create {

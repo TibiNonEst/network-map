@@ -6,14 +6,13 @@
 		updatePop, removePop, addExchange, removeExchange
 	}: PopDetailsProps = $props();
 
-	//@ts-ignore
 	let current_provider = $derived(current_pop.provider);
 
-	let provider = $state(-1);
+	let provider = $state("");
 	let new_exchange = $state("");
 
 	$effect(() => {
-		provider = current_provider || -1;
+		if (current_provider) provider = current_provider;
 	});
 
 	function submitAddExchange(event: SubmitEvent) {
@@ -21,7 +20,7 @@
 
 		addExchange(current_pop.id, Number.parseInt(new_exchange));
 
-		//@ts-ignore
+		// @ts-ignore
 		event.currentTarget.reset();
 	}
 
@@ -43,22 +42,23 @@
 	<br><b>Provider:</b>
 	{#if logged_in}
 		<select name="provider" id="provider" bind:value={provider} onchange={selectProvider}>
-			<option value={-1} selected>No provider provided</option>
+			<option value={""} selected>No provider selected</option>
 			{#each providers as provider, idx}
-				<option value={idx}>{provider.replace("_", " ")}</option>
+				<option value={idx}>{provider.name}</option>
 			{/each}
 		</select>
 	{:else}
-		<span>{current_provider && current_provider > 0 ? providers[current_provider].replace("_", " ") : "None"}</span>
+		<span>{current_provider || "None"}</span>
 		<br>
 	{/if}
 
-	{#if current_pop.adjacencies.length > 0}
-		<br><b>Adjacencies:</b>
+	{#if current_pop.connections.length > 0}
+		<br><b>Connections:</b>
 		<ul>
-			{#each current_pop.adjacencies as id}
-				<li title={id}>
-					{pops.find(pop => pop.id === id)?.name}
+			{#each current_pop.connections as id}
+				<li title={`${id}`}>
+					{id}
+					<!--{pops.find(pop => pop.id === )?.name}-->
 				</li>
 			{/each}
 		</ul>
