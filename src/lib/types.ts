@@ -1,18 +1,59 @@
-import type { FeatureCollection, LineString, Point } from "geojson";
+import type { FeatureCollection, LineString, Point } from "drizzle-postgis";
 
-import type { Connection, Exchange, Pop, Provider } from "../../../isp-api/src/api";
-export type { Connection, Exchange, Pop, Provider };
+export type Cuid2 = string;
+
+export interface Pop {
+	id: string;
+	fac: number;
+	name: string;
+	active: boolean;
+	location: string;
+	longitude: number;
+	latitude: number;
+	provider?: Cuid2 | null;
+	connections: Cuid2[];
+	exchanges: number[];
+}
+
+export interface Exchange {
+	id: number;
+	name: string;
+}
+
+export interface Connection {
+	id: Cuid2;
+	name: string;
+	pops: string[];
+	provider: string;
+	cable: string | null;
+	route: LineString;
+}
+
+export interface Provider {
+	id: Cuid2;
+	name: string;
+	color: string;
+}
 
 export interface User {
+	id: Cuid2;
+	githubId: number;
 	username: string;
-	password: string;
+}
+
+export interface Session {
+	id: Cuid2;
+	secretHash: string;
+	userId: Cuid2;
+	createdAt: Date;
+	lastVerifiedAt: Date | null;
 }
 
 // Component props
 export interface PopDetailsProps {
-	pops: Pop[];
+	connections: Connection[];
 	exchanges: Exchange[];
-	providers: Provider[],
+	providers: Provider[];
 	current_pop: Pop;
 	logged_in: boolean;
 
@@ -27,8 +68,8 @@ export interface ConnectionDetailsProps {
 	current_connection: Connection;
 	logged_in: boolean;
 
-	removeConnection: (id: number) => void;
-	updateConnection: (id: number, provider: string, cable: string, route: string) => void;
+	removeConnection: (id: string) => void;
+	updateConnection: (input: { id: string; pops?: string[]; provider?: string; cable?: string; route?: string }) => void;
 }
 
 export interface MapProps {
@@ -48,8 +89,9 @@ export interface CreateProps {
 	pops: Pop[];
 	providers: Provider[];
 
-	addPop: (id: string, fac: string) => void;
+	addPop: (id: string, fac: number) => void;
 	addConnection: (pop1: string, pop2: string, provider: string, cable: string) => void;
+	addProvider: (name: string, color: string) => void;
 }
 
 export interface LoginProps {
