@@ -8,13 +8,20 @@
 
 	let provider = $state("");
 	let cable = $state("");
+	let route = $derived(JSON.stringify(connection.route.coordinates, null, 2));
 
 	$effect(() => {
 		if (current_provider) provider = current_provider;
 	});
 
 	function selectProvider() {
-		updateConnection({ id: connection.id, provider, cable });
+		updateConnection({ id: connection.id, provider });
+	}
+
+	function updateRoute() {
+		const input = connection.route;
+		input.coordinates = JSON.parse(route);
+		updateConnection({ id: connection.id, route: JSON.stringify(input) });
 	}
 </script>
 
@@ -42,6 +49,12 @@
 	{#if connection.cable}
 		<p><b>Cable:</b> {connection.cable}</p>
 	{/if}
+
+	{#if logged_in}
+		<p class="route-label"><b>Route:</b></p>
+		<code><textarea class="route" bind:value={route}></textarea></code>
+		<button onclick={updateRoute}>Update connection</button>
+	{/if}
 </div>
 
 <style lang="scss">
@@ -57,6 +70,20 @@
 		font-size: 0.85rem;
 		line-height: 1.5rem;
 		box-shadow: 0 0 0.5rem 0 rgba(0, 0, 0, 0.2);
+	}
+
+	.route-label {
+		margin-top: 0.75rem;
+	}
+
+	.route {
+		width: 100% !important;
+		height: 10rem;
+		min-height: 5rem;
+		max-height: 20rem;
+		margin-bottom: 0.5rem;
+		border-radius: 5px;
+		border: 1px solid #ddd;
 	}
 
 	.delete {

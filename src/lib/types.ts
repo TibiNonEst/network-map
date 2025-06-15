@@ -93,8 +93,3 @@ export interface CreateProps {
 	addConnection: (pop1: string, pop2: string, provider: string, cable: string) => void;
 	addProvider: (name: string, color: string) => void;
 }
-
-export interface LoginProps {
-	submit: (username: string, password: string) => void;
-	close: () => void;
-}
