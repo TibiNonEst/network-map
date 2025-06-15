@@ -111,6 +111,7 @@
 		await trpc().addProvider.mutate(input);
 		await invalidateAll();
 		create_open = false;
+		map.update();
 	}
 
 	function selectPop(id: string) {

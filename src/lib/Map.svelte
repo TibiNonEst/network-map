@@ -6,18 +6,21 @@
 
 	import type { MapProps } from "$lib/types";
 	import type { Point } from "drizzle-postgis";
-	import type { GeoJSONSource } from "mapbox-gl";
+	import type { ExpressionSpecification, GeoJSONSource } from "mapbox-gl";
 
 	let { pops, connections, providers, popsJson, connectionsJson, selectPop, deselectPop, selectConnection, deselectConnection }: MapProps = $props();
 
 	let map: mapboxgl.Map;
 
+	let providerMap = $derived(providers.flatMap((provider, idx) => [idx, provider.color]));
+	let providerColors: ExpressionSpecification = $derived(["step", ["get", "provider"], "#6D28D9", ...providerMap]);
+
 	export function update() {
 		(map.getSource("pops") as GeoJSONSource).setData(popsJson);
 		(map.getSource("connections") as GeoJSONSource).setData(connectionsJson);
+		map.setPaintProperty("pops", "circle-color", providerColors);
+		map.setPaintProperty("connections", "line-color", providerColors);
 	}
-
-	const providerMap = providers.flatMap((provider, idx) => [idx, provider.color]);
 
 	onMount(async () => {
 		mapboxgl.accessToken = PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -42,7 +45,7 @@
 				source: "connections",
 				filter: ["has", "provider"],
 				paint: {
-					"line-color": ["step", ["get", "provider"], "#6D28D9", ...providerMap],
+					"line-color": providerColors,
 					"line-width": 3
 				}
 			});
@@ -86,7 +89,7 @@
 				source: "pops",
 				filter: ["!", ["has", "point_count"]],
 				paint: {
-					"circle-color": ["step", ["get", "provider"], "#6D28D9", ...providerMap],
+					"circle-color": providerColors,
 					"circle-radius": 5,
 					"circle-stroke-width": 1,
 					"circle-stroke-color": "white"
