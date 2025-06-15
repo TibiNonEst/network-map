@@ -11,8 +11,8 @@ import type { LineString } from "drizzle-postgis";
 export const t = initTRPC.context<Context>().create();
 
 export const auth = t.middleware(async ({ next, ctx }) => {
-  if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
-  return next();
+	if (!ctx.userId) throw new TRPCError({ code: "UNAUTHORIZED" });
+	return next();
 });
 
 export const router = t.router({
