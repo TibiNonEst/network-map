@@ -17,6 +17,7 @@
 	let { pops, providers, addPop, addConnection, addProvider }: CreateProps = $props();
 
 	const orderedPops = pops.toSorted((pop1, pop2) => pop1.id.localeCompare(pop2.id));
+	const orderedProviders = providers.toSorted((provider1, provider2) => provider1.name.localeCompare(provider2.name));
 
 	function onsubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -64,7 +65,7 @@
 		</select>
 		<select name="provider" id="provider" bind:value={provider} required>
 			<option value="" disabled selected hidden>Select provider</option>
-			{#each providers as provider (provider.id)}
+			{#each orderedProviders as provider (provider.id)}
 				<option value={provider.id}>{provider.name}</option>
 			{/each}
 		</select>
