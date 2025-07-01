@@ -1,5 +1,5 @@
 import { PEERING_DB_KEY } from "$env/static/private";
-import { PUBLIC_MAPBOX_ACCESS_TOKEN } from "$env/static/public";
+import { PUBLIC_MAPTILER_KEY } from "$env/static/public";
 import { initTRPC, TRPCError } from "@trpc/server";
 import { eq, inArray } from "drizzle-orm";
 import { z } from "zod";
@@ -47,7 +47,7 @@ export const router = t.router({
 			let [longitude, latitude] = [pdbObj.longitude, pdbObj.latitude];
 			if (longitude === null || latitude === null) {
 				const geoReq = await fetch(
-					`https://photon.komoot.io/api?q=${location}&limit=1`
+					`https://api.maptiler.com/geocoding/${location}.json&limit=1&key=${PUBLIC_MAPTILER_KEY}`
 				);
 				[longitude, latitude] = await geoReq.json().then((json) => json.features[0].center);
 			}

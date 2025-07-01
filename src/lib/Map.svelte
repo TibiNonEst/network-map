@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { PUBLIC_MAPTILER_KEY } from "$env/static/public";
+
 	import maplibregl from "maplibre-gl";
 
 	import { onMount } from "svelte";
@@ -24,7 +26,7 @@
 	onMount(async () => {
 		map = new maplibregl.Map({
 			container: "map",
-			style: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+			style: `https://api.maptiler.com/maps/dataviz-light/style.json?key=${PUBLIC_MAPTILER_KEY}`,
 			center: [-74, 42.5],
 			minZoom: 2,
 			zoom: 6
@@ -93,18 +95,15 @@
 				}
 			});
 
-			map.on("click", "clusters", (e) => {
+			map.on("click", "clusters", async (e) => {
 				const features = map.queryRenderedFeatures(e.point, { layers: ["clusters"] });
 				const clusterId = features[0].properties?.cluster_id;
 				const source = map.getSource("pops") as GeoJSONSource;
 
-				source.getClusterExpansionZoom(clusterId, (err, zoom) => {
-					if (err) return;
-
-					map.easeTo({
-						center: (features[0].geometry as Point).coordinates as [number, number],
-						zoom: zoom!
-					});
+				const zoom = await source.getClusterExpansionZoom(clusterId);
+				map.easeTo({
+					center: (features[0].geometry as Point).coordinates as [number, number],
+					zoom
 				});
 			});
 
