@@ -47,7 +47,7 @@ export const router = t.router({
 			let [longitude, latitude] = [pdbObj.longitude, pdbObj.latitude];
 			if (longitude === null || latitude === null) {
 				const geoReq = await fetch(
-					`https://api.mapbox.com/geocoding/v5/mapbox.places/${location}.json?limit=1&access_token=${PUBLIC_MAPBOX_ACCESS_TOKEN}`
+					`https://photon.komoot.io/api?q=${location}&limit=1`
 				);
 				[longitude, latitude] = await geoReq.json().then((json) => json.features[0].center);
 			}

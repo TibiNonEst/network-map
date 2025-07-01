@@ -1,16 +1,15 @@
 <script lang="ts">
-	import mapboxgl from "mapbox-gl";
+	import maplibregl from "maplibre-gl";
 
-	import { PUBLIC_MAPBOX_ACCESS_TOKEN } from "$env/static/public";
 	import { onMount } from "svelte";
 
 	import type { MapProps } from "$lib/types";
 	import type { Point } from "drizzle-postgis";
-	import type { ExpressionSpecification, GeoJSONSource } from "mapbox-gl";
+	import type { ExpressionSpecification, GeoJSONSource } from "maplibre-gl";
 
 	let { pops, connections, providers, popsJson, connectionsJson, selectPop, deselectPop, selectConnection, deselectConnection }: MapProps = $props();
 
-	let map: mapboxgl.Map;
+	let map: maplibregl.Map;
 
 	let providerMap = $derived(providers.flatMap((provider, idx) => [idx, provider.color]));
 	let providerColors: ExpressionSpecification = $derived(["step", ["get", "provider"], "#6D28D9", ...providerMap]);
@@ -23,11 +22,9 @@
 	}
 
 	onMount(async () => {
-		mapboxgl.accessToken = PUBLIC_MAPBOX_ACCESS_TOKEN;
-
-		map = new mapboxgl.Map({
+		map = new maplibregl.Map({
 			container: "map",
-			style: "mapbox://styles/mapbox/standard",
+			style: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
 			center: [-74, 42.5],
 			minZoom: 2,
 			zoom: 6
@@ -111,12 +108,12 @@
 				});
 			});
 
-			const popPopup = new mapboxgl.Popup({
+			const popPopup = new maplibregl.Popup({
 				closeButton: false,
 				closeOnClick: false
 			});
 
-			const connectionPopup = new mapboxgl.Popup({
+			const connectionPopup = new maplibregl.Popup({
 				closeButton: false,
 				closeOnClick: false
 			});

@@ -2,7 +2,7 @@
 	import "normalize.css/normalize.css";
 	import "@fortawesome/fontawesome-free/css/fontawesome.css";
 	import "@fortawesome/fontawesome-free/css/solid.css";
-	import "mapbox-gl/dist/mapbox-gl.css";
+	import "maplibre-gl/dist/maplibre-gl.css";
 
 	import Map from "$lib/Map.svelte";
 	import PopDetails from "$lib/PopDetails.svelte";

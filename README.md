@@ -14,7 +14,6 @@ This project is an NSP-ready network map which pulls data directly from PeeringD
 
 | Environment Variable         | Description                                       |
 | ---------------------------- | ------------------------------------------------- |
-| `PUBLIC_MAPBOX_ACCESS_TOKEN` | The public mapbox access token                    |
 | `PEERING_DB_KEY`             | The PeeringDB API key                             |
 | `DATABASE_URL`               | The URL of your PostgreSQL database               |
 | `GITHUB_CLIENT_ID`           | GitHub OAuth client ID                            |
