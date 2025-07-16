@@ -7,6 +7,7 @@ import { z } from "zod";
 import type { Context } from "$lib/trpc/context";
 import type { Connection, Exchange, Pop, Provider } from "$lib/types";
 import type { LineString } from "drizzle-postgis";
+import { geocoding } from "@maptiler/client";
 
 export const t = initTRPC.context<Context>().create();
 
@@ -46,10 +47,8 @@ export const router = t.router({
 
 			let [longitude, latitude] = [pdbObj.longitude, pdbObj.latitude];
 			if (longitude === null || latitude === null) {
-				const geoReq = await fetch(
-					`https://api.maptiler.com/geocoding/${location}.json&limit=1&key=${PUBLIC_MAPTILER_KEY}`
-				);
-				[longitude, latitude] = await geoReq.json().then((json) => json.features[0].center);
+				const result = await geocoding.forward(location, { apiKey: PUBLIC_MAPTILER_KEY, limit: 1 });
+				[longitude, latitude] = result.features[0].center;
 			}
 
 			const pop = {
