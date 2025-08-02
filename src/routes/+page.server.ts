@@ -33,10 +33,7 @@ export const load: PageServerLoad = async (event) => {
 		features: connections.map((connection) => {
 			const geometry: LineString = event.locals.user ? connection.route : {
 					type: "LineString",
-					coordinates: connection.pops.map(id => {
-						const pop = pops.find(pop => pop.id === id);
-						return pop ? [pop.longitude, pop.latitude] : [];
-					})
+					coordinates: [connection.route.coordinates[0], connection.route.coordinates.at(-1)!]
 				};
 			return {
 				type: "Feature",
