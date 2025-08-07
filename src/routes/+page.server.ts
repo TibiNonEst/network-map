@@ -30,11 +30,9 @@ export const load: PageServerLoad = async (event) => {
 
 	const connectionsJson: FeatureCollection<LineString> = {
 		type: "FeatureCollection",
-		features: connections.map((connection) => {
-			const geometry: LineString = event.locals.user ? connection.route : {
-					type: "LineString",
-					coordinates: [connection.route.coordinates[0], connection.route.coordinates.at(-1)!]
-				};
+		features: event.locals.user ? connections.map((connection) => {
+			const geometry = connection.route;
+
 			return {
 				type: "Feature",
 				geometry, 
@@ -43,7 +41,7 @@ export const load: PageServerLoad = async (event) => {
 					provider: providers.findIndex((provider) => provider.id === connection.provider)
 				}
 			};
-		})
+		}) : []
 	};
 
 	return { pops, popsJson, exchanges, connections, connectionsJson, providers, user: event.locals.user };
