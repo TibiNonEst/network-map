@@ -221,7 +221,7 @@
 	:global(select) {
 		padding: 0.3rem;
 		margin-bottom: 0.75rem;
-		border-style: solid;
+		border: solid 2px #ddd;
 		border-radius: 0.25rem;
 	}
 
